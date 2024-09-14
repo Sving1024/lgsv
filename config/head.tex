@@ -1,0 +1,43 @@
+%% 设置页边距
+%% \usepackage[top=2cm, bottom=2cm, left=1.5cm, right=1.5cm]{geometry}
+
+%% 针对中文自动换行
+\XeTeXlinebreaklocale "zh"
+
+%% 设置行间距 1.5 倍
+\linespread{1.5}\selectfont
+
+%% 设置首行缩进
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+
+%% 段落之间的距离
+\setlength{\parskip}{3pt}   
+
+%% 字与字之间加入0pt至1pt的间距，确保左右对齐
+\XeTeXlinebreakskip = 0pt plus 1pt
+
+%% 设置表头背景色
+\usepackage{colortbl}
+\definecolor{tableheadcolor}{RGB}{225,225,225}
+
+%% 设置 shade 背景色（代码背景颜色）
+\usepackage{color,framed}
+\definecolor{shadecolor}{RGB}{235,235,235}
+
+%% 设置 block quote 的样式
+%% 由于还不知道怎么统一设置 quote 的背景色，先引用 shade 背景色
+%% 用左右边距区分 quote
+\usepackage{quoting}
+\newenvironment{shadedquotation}
+ {\begin{shaded*}
+  \quoting[leftmargin=1em, rightmargin=1em, vskip=0pt, font=itshape]
+ }
+ {\endquoting
+ \end{shaded*}
+ }
+
+% quote 应用 shadedquotation 环境
+\def\quote{\shadedquotation}
+\def\endquote{\endshadedquotation}
+
