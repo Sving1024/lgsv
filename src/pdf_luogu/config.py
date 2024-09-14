@@ -17,6 +17,12 @@ with open('config.toml','rb') as conf:
 #配置文件，先咕一会
 """
 
+config['pandocArgs']=[
+    '-f',
+    'markdown-blank_before_header+lists_without_preceding_blankline',
+    '--katex'
+]
+
 arg_parser = argparse.ArgumentParser(description='爬取洛谷题目并且进行格式转化')
 arg_parser.add_argument('-p','--problem',action='append',help='题目列表')
 arg_parser.add_argument('-t','--training',action='append',help='题单列表')
