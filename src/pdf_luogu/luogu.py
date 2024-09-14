@@ -1,6 +1,6 @@
 """json解析"""
 import json
-
+import config
 import httpx
 
 
@@ -34,14 +34,18 @@ class Training:
     __BASE_URL='https://www.luogu.com.cn/training/'
     id=''
     data=None
+    problemList = []
 
     def __init__(self,_id) -> None:
         self.id=_id
 
     def fetchResources(self) -> httpx.Response:
-        if self.__html_cache != None:
-            return self.__html_cache
         raw_resources=httpx.get(self.__BASE_URL+self.id,params={'_contentOnly' : ''})
         rescoures = json.loads(raw_resources.text)
         self.data=rescoures['currentData']['training']
+        for p in self.data['problems']:
+            self.problemList.append(Problem(p['problem']['pid']))
         return self.data
+    
+    def getProblemList(self):
+        return self.problemList
