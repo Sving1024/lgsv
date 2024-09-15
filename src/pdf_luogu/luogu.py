@@ -1,14 +1,15 @@
 """json解析"""
 import json
-import config
+
 import httpx
+
+import setting
 
 
 class Problem:
     """
     洛谷题目类
     id 题目编号
-    __html_cache html缓存
     data 用于存储题目的数据，从请求到的json中解析出来的
     """
     __BASE_URL='https://www.luogu.com.cn/problem/'
@@ -84,10 +85,3 @@ class Training:
     
     def getProblemList(self):
         return self.problemList
-
-
-x = Problem('P1001')
-x.fetchResources()
-
-with open("/home/Sving1024/test.md","w") as f:
-    f.write(x.markdown)

@@ -21,7 +21,10 @@ with open('config.toml','rb') as conf:
 config['pandocArgs']=[
     '-f',
     'markdown-blank_before_header+lists_without_preceding_blankline',
-    '--katex'
+    '--katex',
+    '--pdf-engine=xelatex',
+    "-V mainfont='等线'",
+#    '--include-in-header=head.tex',
 ]
 
 arg_parser = argparse.ArgumentParser(description='爬取洛谷题目并且进行格式转化')
