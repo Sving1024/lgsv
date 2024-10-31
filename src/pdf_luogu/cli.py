@@ -1,9 +1,7 @@
 import pypandoc
 from pathlib import Path
+import asyncio
 import shutil
-import sys
-#ys.path.append('')
-#sys.path.append('../')
 try:
     import luogu, setting
 except ModuleNotFoundError:
@@ -12,20 +10,24 @@ except ModuleNotFoundError:
 if not Path('head.tex').exists:
     shutil.copyfile(setting.modPath / 'config' / 'head.tex','head.tex')
 
-def main():
+async def main():
     setting.parse_args()
     mdSrc = ''
     problems = []
-    for p in setting.target['problem']:
-        problems.append(luogu.Problem(p))
-    for t in setting.target['training']:
-        training = luogu.Training(t)
-        training.fetchResources()
-        problems.extend(training.getProblemList())
+    if ('problem' in setting.target) & (setting.target['problem']!=None):
+        for p in setting.target['problem']:
+            problems.append(luogu.Problem(p))
+    if ('training' in setting.target) & (setting.target['training']!=None):
+        for t in setting.target['training']:
+            training = luogu.Training(t)
+            await training.fetchResources()
+            problems.extend(training.getProblemList())
     for p in problems:
-        p.fetchResources()
+        await p.fetchResources()
         mdSrc += p.markdown
-    pypandoc.convert_text(mdSrc,format='md',to='pdf',extra_args=setting.config['pandocArgs'],outputfile="./out.pdf")
+    with open('out.md','w') as f:
+        f.write(mdSrc)
+#    pypandoc.convert_text(mdSrc,format='md',to='pdf',extra_args=setting.config['pandocArgs'],outputfile="./out.pdf")
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

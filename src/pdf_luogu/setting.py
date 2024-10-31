@@ -5,6 +5,11 @@ from pathlib import Path
 
 import tomli
 
+try:
+    import luogu
+except ModuleNotFoundError:
+    from pdf_luogu import luogu
+
 modPath = Path(__file__).parent.parent
 
 target = {}
@@ -31,11 +36,17 @@ arg_parser = argparse.ArgumentParser(description='爬取洛谷题目并且进行
 arg_parser.add_argument('-p','--problem',action='append',help='题目列表')
 arg_parser.add_argument('-t','--training',action='append',help='题单列表')
 arg_parser.add_argument('--pandoc-args',type=str,help='传给pandoc的参数')
+arg_parser.add_argument('--client-id',type=str,help="client id")
+arg_parser.add_argument('--order',type=str,help="client id")
 
 def parse_args():
     args = arg_parser.parse_args()
     args = {**vars(args)}
     target['problem'] = args['problem']
     target['training'] = args['training']
-    if 'pandoc-args' in args:
-        config['pandocArgs'] = args['pandoc-args']
+    if 'pandoc_args' in args:
+        config['pandocArgs'] = args['pandoc_args']
+    if 'csrf_token' in args:
+        luogu.headers['x-csrf-token']=args['csrf_token']
+    if 'order' in args:
+        config['order']=args['order'].split(',');
