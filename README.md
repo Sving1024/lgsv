@@ -1,6 +1,8 @@
-# pdf-luogu
+# lgsv
 
-爬取洛谷题目并转化为pdf格式。
+LuoGu problem/training SaVer.
+
+爬取洛谷题目。
 尚未完工。
 
 目前实现的功能：
