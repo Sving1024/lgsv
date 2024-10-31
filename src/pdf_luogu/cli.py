@@ -1,9 +1,12 @@
-import pypandoc
-from pathlib import Path
 import asyncio
 import shutil
+from pathlib import Path
+
+import pypandoc
+
 try:
-    import luogu, setting
+    import luogu
+    import setting
 except ModuleNotFoundError:
     from pdf_luogu import luogu, setting
 
