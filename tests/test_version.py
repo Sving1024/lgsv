@@ -1,5 +1,5 @@
 """Tests"""
-from pdf_luogu import __version__
+from lgsv import __version__
 
 
 def test_version():

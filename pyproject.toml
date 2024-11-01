@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pdf_luogu"
+name = "lgsv"
 version = "0.1.0"
 description = "爬取洛谷题目并转化为pdf格式"
 readme = "README.md"
@@ -37,4 +37,4 @@ python_files = "tests.py test_*.py *_tests.py"
 max-line-length = 120
 
 [tool.poetry.plugins.console_scripts]
-pdf-luogu = "pdf_luogu.cli:main"
+lgsv = "lgsv.cli:main"

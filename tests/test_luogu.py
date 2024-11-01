@@ -2,4 +2,8 @@ import sys
 
 import pytest
 
-from pdf_luogu import luogu
+from lgsv import luogu
+from lgsv import setting
+
+def test_luogu():
+    pass
