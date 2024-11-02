@@ -15,6 +15,7 @@ python = "^3.11"
 httpx = "^0.27.2"
 pypandoc = "^1.13"
 tomli = "^2.0.1"
+bs4 = "^0.0.2"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^2.17.4"

@@ -1,19 +1,50 @@
 """
 json 解析获取的 json
 httpx 用于发送 http 请求
+BeautifulSoup 解析html
 """
+
 import json
 
 import httpx
+from bs4 import BeautifulSoup
+
+from lgsv.setting import cookies
 
 headers = {
-    "x-csrf-token": "",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
+    "Referer": "https://www.luogu.com.cn/",
+    "Connection": "keep-alive",
+#    "Cookie": "",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "same-origin",
+    "Priority": "u=0, i",
+#    "x-csrf-token": "",
 }
-
 params = {"_contentOnly": ""}
+
+
+async def fetch_csrf_token():
+    """获取csrf token"""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            url="https://www.luogu.com.cn",
+            #            params=params,
+            headers=headers,
+#            cookies=cookies,
+        )
+    soup = BeautifulSoup(response.text, "html.parser")
+    csrf_token = soup.find("meta", attrs={"name": "csrf-token"})
+    headers["x-csrf-token"] = csrf_token.get("content")
+    return headers["x-csrf-token"]
+
 
 class Problem:
     """洛谷题目类"""
+
     __BASE_URL = "https://www.luogu.com.cn/problem/"
     problem_id = ""
     data = None
@@ -52,7 +83,7 @@ class Problem:
                 ret = "## 题目翻译"
                 p = "translation"
         if self.data[p] is None:
-            return ''
+            return ""
         if p != "title":
             ret += "\n"
         if p == "samples":
@@ -79,7 +110,10 @@ class Problem:
         print("从" + self.__BASE_URL + self.problem_id + "获取数据")
         async with httpx.AsyncClient() as client:
             raw_resources = await client.get(
-                self.__BASE_URL + self.problem_id, params=params, headers=headers
+                self.__BASE_URL + self.problem_id,
+                params=params,
+                headers=headers,
+#                cookies=cookies,
             )
         print("解析题目" + self.problem_id)
         # 解析请求到的 json
@@ -87,10 +121,10 @@ class Problem:
         self.data = rescoures["currentData"]["problem"]
         return self.data
 
-    def get_markdown(self,order=None):
+    def get_markdown(self, order=None):
         """以 order 的顺序获取题目的markdown"""
         if order is None:
-            order=['b','d','if','of','s','h','tr']
+            order = ["b", "d", "if", "of", "s", "h", "tr"]
         self.markdown = self.part_markdown("title")
         for c in order:
             self.markdown += self.part_markdown(c)
@@ -126,6 +160,7 @@ class Problem:
 
 class Training:
     """洛谷题单类"""
+
     __BASE_URL = "https://www.luogu.com.cn/training/"
     training_id = ""
     data = None
@@ -139,7 +174,10 @@ class Training:
         print("从" + self.__BASE_URL + self.training_id + "获取数据")
         async with httpx.AsyncClient() as client:
             raw_resources = await client.get(
-                self.__BASE_URL + self.training_id, params=params, headers=headers
+                self.__BASE_URL + self.training_id,
+                params=params,
+                headers=headers,
+#                cookies=cookies,
             )
         print("解析题单" + self.training_id)
         rescoures = json.loads(raw_resources.text)

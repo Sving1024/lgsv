@@ -7,20 +7,17 @@ try:
 except ModuleNotFoundError:
     from lgsv import luogu, setting
 
-#if not Path("head.tex").exists:
-#
-#    shutil.copyfile(setting.modPath / "config" / "head.tex", "head.tex")
-
-
 async def main():
     """main 函数"""
     setting.parse_args()
+#    await luogu.fetch_csrf_token()
+    luogu.headers["Cookie"]=setting.global_config["cookie"]
     md_src = ""
     problems = []
     trainings = []
     if ("problem" in setting.target) & (setting.target["problem"] is not None):
         for p in setting.target["problem"]:
-            problems.append(luogu.Problem(problem_id=p, config=setting.golbal_config))
+            problems.append(luogu.Problem(problem_id=p, config=setting.global_config))
     if ("training" in setting.target) & (setting.target["training"] is not None):
         for t in setting.target["training"]:
             trainings.append(luogu.Training(training_id=t))
@@ -33,15 +30,13 @@ async def main():
         for p in problems:
             tg.create_task(p.fetch_resources())
     for p in problems:
-        md_src += p.get_markdown(setting.golbal_config['order'])
+        md_src += p.get_markdown(setting.global_config['order'])
     with open(file="out.md", mode="w",encoding="utf-8") as f:
         f.write(md_src)
 
 def run():
     """运行 main 函数"""
     asyncio.run(main())
-
-#    pypandoc.convert_text(md_src,format='md',to='pdf',extra_args=setting.config['pandocArgs'],outputfile="./out.pdf")
 
 if __name__ == "__main__":
     run()

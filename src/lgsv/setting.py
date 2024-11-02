@@ -1,17 +1,18 @@
 """
 argparse 处理命令行参数
 """
+
 import argparse
 
-try:
-    import luogu
-except ModuleNotFoundError:
-    from lgsv import luogu
-
-#modPath = Path(__file__).parent.parent
+# modPath = Path(__file__).parent.parent
 
 target = {}
-golbal_config = {}
+global_config = {"order": None}
+
+cookies = {
+    "__client_id": "",
+    "_uid": "",
+}
 
 """
 if not Path('config.toml').exists:
@@ -21,7 +22,7 @@ with open('config.toml','rb') as conf:
 #配置文件，先咕一会
 """
 
-golbal_config["pandocArgs"] = [
+global_config["pandocArgs"] = [
     "-f",
     "markdown-blank_before_header+lists_without_preceding_blankline",
     "--katex",
@@ -34,8 +35,10 @@ arg_parser = argparse.ArgumentParser(description="爬取洛谷题目并且进行
 arg_parser.add_argument("-p", "--problem", action="append", help="题目列表")
 arg_parser.add_argument("-t", "--training", action="append", help="题单列表")
 arg_parser.add_argument("--pandoc-args", type=str, help="传给pandoc的参数")
-arg_parser.add_argument("--client-id", type=str, help="client id")
+# arg_parser.add_argument("--client-id", type=str, help="client id")
 arg_parser.add_argument("--order", type=str, help="指定题目部分的顺序")
+# arg_parser.add_argument("-u","--uid",type=int,help="洛谷uid")
+arg_parser.add_argument("-c", "--cookie", type=str, help="洛谷cookie")
 
 
 def parse_args():
@@ -45,8 +48,17 @@ def parse_args():
     target["problem"] = args["problem"]
     target["training"] = args["training"]
     if "pandoc_args" in args:
-        golbal_config["pandocArgs"] = args["pandoc_args"]
-    if "csrf_token" in args:
-        luogu.headers["x-csrf-token"] = args["csrf_token"]
+        global_config["pandocArgs"] = args["pandoc_args"]
+    if "cookie" in args:
+        global_config["cookie"] = args["cookie"]
+
+    #    if "uid" in args:
+    #        global_config["uid"] = args["uid"]
+    #        cookies["_uid"]=args["uid"]
     if "order" in args:
-        golbal_config["order"] = args["order"].split(",")
+        global_config["order"] = args["order"].split(",")
+
+
+#    if "client_id" in args:
+#        global_config["client_id"]=args["client_id"]
+#        cookies["__client_id"]=args["client_id"]
