@@ -1,12 +1,14 @@
+"""
+argparse 处理命令行参数
+"""
 import argparse
-from pathlib import Path
 
 try:
     import luogu
 except ModuleNotFoundError:
     from lgsv import luogu
 
-modPath = Path(__file__).parent.parent
+#modPath = Path(__file__).parent.parent
 
 target = {}
 golbal_config = {}
@@ -37,6 +39,7 @@ arg_parser.add_argument("--order", type=str, help="指定题目部分的顺序")
 
 
 def parse_args():
+    """处理参数"""
     args = arg_parser.parse_args()
     args = {**vars(args)}
     target["problem"] = args["problem"]

@@ -1,3 +1,7 @@
+"""
+json 解析获取的 json
+httpx 用于发送 http 请求
+"""
 import json
 
 import httpx
@@ -9,6 +13,7 @@ headers = {
 params = {"_contentOnly": ""}
 
 class Problem:
+    """洛谷题目类"""
     __BASE_URL = "https://www.luogu.com.cn/problem/"
     problem_id = ""
     data = None
@@ -18,6 +23,7 @@ class Problem:
         self.problem_id = problem_id
 
     def part_markdown(self, part):
+        """单独获取题目的部分markdown,如题目背景,题目描述等"""
         ret = None
         p = part
         match part:
@@ -45,6 +51,8 @@ class Problem:
             case "translation" | "tr":
                 ret = "## 题目翻译"
                 p = "translation"
+        if self.data[p] is None:
+            return ''
         if p != "title":
             ret += "\n"
         if p == "samples":
@@ -65,7 +73,8 @@ class Problem:
             return ret
         return ret + self.data[p] + "\n"
 
-    async def fetch_resources(self) -> httpx.Response:
+    async def fetch_resources(self):
+        """取回题目资源并将其存储到 self.data 中,返回 self.data"""
         # 将请求存储到 __html_cache 中
         print("从" + self.__BASE_URL + self.problem_id + "获取数据")
         async with httpx.AsyncClient() as client:
@@ -76,8 +85,12 @@ class Problem:
         # 解析请求到的 json
         rescoures = json.loads(raw_resources.text)
         self.data = rescoures["currentData"]["problem"]
+        return self.data
 
-    def get_markdown(self,order):
+    def get_markdown(self,order=None):
+        """以 order 的顺序获取题目的markdown"""
+        if order is None:
+            order=['b','d','if','of','s','h','tr']
         self.markdown = self.part_markdown("title")
         for c in order:
             self.markdown += self.part_markdown(c)
@@ -104,13 +117,15 @@ class Problem:
                     )
                     i = prev_c + 1
             i += 1
-        return self.data
+        return self.markdown
 
     def diffculty(self) -> int:
+        """返回题目难度"""
         return self.data["diffculty"]
 
 
 class Training:
+    """洛谷题单类"""
     __BASE_URL = "https://www.luogu.com.cn/training/"
     training_id = ""
     data = None
@@ -119,7 +134,8 @@ class Training:
     def __init__(self, training_id) -> None:
         self.training_id = training_id
 
-    async def fetch_resources(self) -> httpx.Response:
+    async def fetch_resources(self):
+        """取回题目资源并将其存储到 self.data 中,返回 self.data"""
         print("从" + self.__BASE_URL + self.training_id + "获取数据")
         async with httpx.AsyncClient() as client:
             raw_resources = await client.get(
@@ -133,4 +149,5 @@ class Training:
         return self.data
 
     def get_problem_list(self):
+        """返回题单包含的题目列表"""
         return self.problemList
