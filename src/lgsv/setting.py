@@ -39,6 +39,7 @@ arg_parser.add_argument("--pandoc-args", type=str, help="传给pandoc的参数")
 arg_parser.add_argument("--order", type=str, help="指定题目部分的顺序")
 # arg_parser.add_argument("-u","--uid",type=int,help="洛谷uid")
 arg_parser.add_argument("-c", "--cookie", type=str, help="洛谷cookie")
+arg_parser.add_argument("-o","--output",type=str,help="输出 markdown 的位置")
 
 
 def parse_args():
@@ -57,7 +58,10 @@ def parse_args():
     #        cookies["_uid"]=args["uid"]
     if args["order"] is not None:
         global_config["order"] = args["order"].split(",")
-
+    if args["output"] is not None:
+        global_config["output"]=args["output"]
+    else:
+        global_config["output"]="out.md"
 
 #    if "client_id" in args:
 #        global_config["client_id"]=args["client_id"]

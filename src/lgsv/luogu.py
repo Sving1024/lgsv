@@ -24,9 +24,9 @@ headers = {
 }
 params = {"_contentOnly": ""}
 
-
+"""
 async def fetch_csrf_token():
-    """获取csrf token"""
+    获取csrf token
     async with httpx.AsyncClient() as client:
         response = await client.get(
             url="https://www.luogu.com.cn",
@@ -38,7 +38,7 @@ async def fetch_csrf_token():
     csrf_token = soup.find("meta", attrs={"name": "csrf-token"})
     headers["x-csrf-token"] = csrf_token.get("content")
     return headers["x-csrf-token"]
-
+"""
 
 class Problem:
     """洛谷题目类"""
@@ -80,7 +80,7 @@ class Problem:
             case "translation" | "tr":
                 ret = "## 题目翻译"
                 p = "translation"
-        if self.data[p] is None:
+        if str(p) not in self.data:
             return ""
         if p != "title":
             ret += "\n"

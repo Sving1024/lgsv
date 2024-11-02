@@ -11,7 +11,8 @@ async def main():
     """main 函数"""
     setting.parse_args()
 #    await luogu.fetch_csrf_token()
-    luogu.headers["Cookie"]=setting.global_config["cookie"]
+    if setting.global_config["cookie"] is not None:
+        luogu.headers["Cookie"]=setting.global_config["cookie"]
     md_src = ""
     problems = []
     trainings = []
@@ -31,7 +32,7 @@ async def main():
             tg.create_task(p.fetch_resources())
     for p in problems:
         md_src += p.get_markdown(setting.global_config['order'])
-    with open(file="out.md", mode="w",encoding="utf-8") as f:
+    with open(file=setting.global_config["output"], mode="w",encoding="utf-8") as f:
         f.write(md_src)
 
 def run():
