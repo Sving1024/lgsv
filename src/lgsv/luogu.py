@@ -13,11 +13,9 @@ class Problem:
     problem_id = ""
     data = None
     markdown = ""
-    config = None
 
-    def __init__(self, problem_id, config) -> None:
+    def __init__(self, problem_id) -> None:
         self.problem_id = problem_id
-        self.config = config
 
     def part_markdown(self, part):
         ret = None
@@ -78,8 +76,10 @@ class Problem:
         # 解析请求到的 json
         rescoures = json.loads(raw_resources.text)
         self.data = rescoures["currentData"]["problem"]
+
+    def get_markdown(self,order):
         self.markdown = self.part_markdown("title")
-        for c in self.config["order"]:
+        for c in order:
             self.markdown += self.part_markdown(c)
         cnt_d = 0
         i = 0
@@ -115,11 +115,9 @@ class Training:
     training_id = ""
     data = None
     problemList = []
-    config = None
 
-    def __init__(self, training_id, config) -> None:
+    def __init__(self, training_id) -> None:
         self.training_id = training_id
-        self.config = config
 
     async def fetch_resources(self) -> httpx.Response:
         print("从" + self.__BASE_URL + self.training_id + "获取数据")
@@ -131,7 +129,7 @@ class Training:
         rescoures = json.loads(raw_resources.text)
         self.data = rescoures["currentData"]["training"]
         for p in self.data["problems"]:
-            self.problemList.append(Problem(problem_id=p["problem"]["pid"], config=self.config))
+            self.problemList.append(Problem(problem_id=p["problem"]["pid"]))
         return self.data
 
     def get_problem_list(self):

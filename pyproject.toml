@@ -37,4 +37,4 @@ python_files = "tests.py test_*.py *_tests.py"
 max-line-length = 120
 
 [tool.poetry.plugins.console_scripts]
-lgsv = "lgsv.cli:main"
+lgsv = "lgsv.cli:run"

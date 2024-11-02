@@ -16,22 +16,30 @@ async def main():
     setting.parse_args()
     md_src = ""
     problems = []
+    trainings = []
     if ("problem" in setting.target) & (setting.target["problem"] is not None):
         for p in setting.target["problem"]:
             problems.append(luogu.Problem(problem_id=p, config=setting.golbal_config))
     if ("training" in setting.target) & (setting.target["training"] is not None):
         for t in setting.target["training"]:
-            training = luogu.Training(training_id=t, config=setting.golbal_config)
-            await training.fetch_resources()
-            problems.extend(training.get_problem_list())
-    for p in problems:
-        await p.fetch_resources()
+            trainings.append(luogu.Training(training_id=t))
+    async with asyncio.TaskGroup() as tg:  
+        for t in trainings:
+            tg.create_task(t.fetch_resources())
+    for t in trainings:    
+        problems.extend(t.get_problem_list())
+    async with asyncio.TaskGroup() as tg:
+        for p in problems:
+            tg.create_task(p.fetch_resources())
+    for p in problems:    
         md_src += p.markdown
     with open("out.md", "w") as f:
         f.write(md_src)
 
+def run():
+    asyncio.run(main())
 
 #    pypandoc.convert_text(md_src,format='md',to='pdf',extra_args=setting.config['pandocArgs'],outputfile="./out.pdf")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run()

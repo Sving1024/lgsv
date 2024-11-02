@@ -19,3 +19,4 @@ LuoGu problem/training SaVer.
 2. 处理各类异常
 3. 添加更多功能
 4. 完善文档
+5. 其它格式
