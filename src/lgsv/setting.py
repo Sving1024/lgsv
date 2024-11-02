@@ -55,7 +55,7 @@ def parse_args():
     #    if "uid" in args:
     #        global_config["uid"] = args["uid"]
     #        cookies["_uid"]=args["uid"]
-    if "order" in args:
+    if args["order"] is not None:
         global_config["order"] = args["order"].split(",")
 
 
