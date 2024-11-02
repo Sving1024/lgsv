@@ -2,8 +2,8 @@ import sys
 
 import pytest
 
-from lgsv import luogu
-from lgsv import setting
+from lgsv import luogu, setting
+
 
 def test_luogu():
     pass
