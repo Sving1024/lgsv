@@ -1,13 +1,11 @@
 """
 json 解析获取的 json
 httpx 用于发送 http 请求
-BeautifulSoup 解析html
 """
 
 import json
 
 import httpx
-from bs4 import BeautifulSoup
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
