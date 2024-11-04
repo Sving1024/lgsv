@@ -14,13 +14,13 @@ headers = {
     "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
     "Referer": "https://www.luogu.com.cn/",
     "Connection": "keep-alive",
-#    "Cookie": "",
+    #    "Cookie": "",
     "Upgrade-Insecure-Requests": "1",
     "Sec-Fetch-Dest": "document",
     "Sec-Fetch-Mode": "navigate",
     "Sec-Fetch-Site": "same-origin",
     "Priority": "u=0, i",
-#    "x-csrf-token": "",
+    #    "x-csrf-token": "",
 }
 params = {"_contentOnly": ""}
 
@@ -39,6 +39,7 @@ async def fetch_csrf_token():
     headers["x-csrf-token"] = csrf_token.get("content")
     return headers["x-csrf-token"]
 """
+
 
 class Problem:
     """洛谷题目类"""
@@ -80,7 +81,7 @@ class Problem:
             case "translation" | "tr":
                 ret = "## 题目翻译"
                 p = "translation"
-        if str(p) not in self.data:
+        if str(p) not in self.data or self.data[p] is None:
             return ""
         if p != "title":
             ret += "\n"
@@ -99,6 +100,7 @@ class Problem:
                     + sample[1]
                     + "\n```\n"
                 )
+                i += 1
             return ret
         return ret + self.data[p] + "\n"
 
@@ -111,7 +113,7 @@ class Problem:
                 self.__BASE_URL + self.problem_id,
                 params=params,
                 headers=headers,
-#                cookies=cookies,
+                #                cookies=cookies,
             )
         print("解析题目" + self.problem_id)
         # 解析请求到的 json
@@ -131,7 +133,10 @@ class Problem:
         while i < len(self.markdown):
             if self.markdown[i] == "$":
                 cnt_d += 1
+
                 if (cnt_d & 1) == 1:
+                    if self.markdown[i + 1] == "$":
+                        i += 1
                     nxt_c = i + 1
                     while self.markdown[nxt_c] == " ":
                         nxt_c += 1
@@ -148,6 +153,8 @@ class Problem:
                         + self.markdown[-(len(self.markdown) - i) :]
                     )
                     i = prev_c + 1
+                    if self.markdown[i + 1] == "$":
+                        i += 1
             i += 1
         return self.markdown
 
@@ -175,7 +182,7 @@ class Training:
                 self.__BASE_URL + self.training_id,
                 params=params,
                 headers=headers,
-#                cookies=cookies,
+                #                cookies=cookies,
             )
         print("解析题单" + self.training_id)
         rescoures = json.loads(raw_resources.text)
