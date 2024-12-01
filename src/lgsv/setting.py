@@ -30,12 +30,28 @@ global_config = {
     "output": "out.md",
 }
 
-arg_parser = argparse.ArgumentParser(description="爬取洛谷题目并且进行格式转化")
+arg_parser = argparse.ArgumentParser(
+    description="爬取洛谷题目并且进行格式转化",
+    formatter_class=argparse.RawTextHelpFormatter,
+)
 arg_parser.add_argument("-p", "--problem", action="append", help="题目列表")
 arg_parser.add_argument("-t", "--training", action="append", help="题单列表")
 arg_parser.add_argument("--pandoc-args", type=str, help="传给pandoc的参数")
 # arg_parser.add_argument("--client-id", type=str, help="client id")
-arg_parser.add_argument("--order", type=str, help="指定题目部分的顺序")
+arg_parser.add_argument(
+    "--order",
+    type=str,
+    help='\n'.join([
+        "指定题目部分的顺序，用逗号分隔。",
+        "b/background 对应题目背景",
+        "s/samples 对应样例",
+        "if/inputFormat 对应输入格式",
+        "of/outputFormat 对应输出格式",
+        "h/hint 对应说明/提示",
+        "d/description 对应题目描述",
+        "tr/translation 对应题目翻译。",
+    ])
+)
 # arg_parser.add_argument("-u","--uid",type=int,help="洛谷uid")
 arg_parser.add_argument("-c", "--cookie", type=str, help="洛谷cookie")
 arg_parser.add_argument("-o", "--output", type=str, help="输出 markdown 的位置")
