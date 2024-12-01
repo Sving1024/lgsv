@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "lgsv"
 version = "0.1.0"
-description = "爬取洛谷题目并转化为pdf格式"
+description = "爬取洛谷题目并用 markdown 格式保存"
 readme = "README.md"
 authors = ["Sving1024 <piano5432@outlook.com>"]
 license = "GPL"
