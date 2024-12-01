@@ -39,6 +39,16 @@ async def fetch_csrf_token():
 """
 
 
+class HttpError(Exception):
+    """
+    HTTP 异常。
+    由于处理各类 HTTP 错误。
+    """
+
+    def __init__(self, msg):
+        self.message = msg
+
+
 class Problem:
     """洛谷题目类"""
 
@@ -116,13 +126,13 @@ class Problem:
         print("解析题目" + self.problem_id)
         # 解析请求到的 json
         rescoures = json.loads(raw_resources.text)
+        if rescoures["code"] != 200:
+            raise HttpError(f"访问{self.__BASE_URL}{self.problem_id}失败：HTTP ERROR {rescoures["code"]}")
         self.data = rescoures["currentData"]["problem"]
         return self.data
 
     def get_markdown(self, order=None):
         """以 order 的顺序获取题目的markdown"""
-        if order is None:
-            order = ["b", "d", "if", "of", "s", "h", "tr"]
         self.markdown = self.part_markdown("title")
         for c in order:
             self.markdown += self.part_markdown(c)
@@ -184,6 +194,8 @@ class Training:
             )
         print("解析题单" + self.training_id)
         rescoures = json.loads(raw_resources.text)
+        if rescoures["code"] != 200:
+            raise HttpError(f"访问{self.__BASE_URL}{self.training_id}失败：HTTP ERROR {rescoures["code"]}")
         self.data = rescoures["currentData"]["training"]
         for p in self.data["problems"]:
             self.problemList.append(Problem(problem_id=p["problem"]["pid"]))
