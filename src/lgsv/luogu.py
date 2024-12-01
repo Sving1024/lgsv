@@ -53,9 +53,13 @@ class Problem:
     """洛谷题目类"""
 
     __BASE_URL = "https://www.luogu.com.cn/problem/"
-    problem_id = ""
-    data = None
-    markdown = ""
+    problem_id: str
+    # data = None
+    markdown: str
+    difficulty: int
+    tags: list
+    limits = {"time": [], "memory": []}
+    body: dict
 
     def __init__(self, problem_id) -> None:
         self.problem_id = problem_id
@@ -89,14 +93,14 @@ class Problem:
             case "translation" | "tr":
                 ret = "## 题目翻译"
                 p = "translation"
-        if str(p) not in self.data or self.data[p] is None:
+        if str(p) not in self.body or self.body[p] is None:
             return ""
         if p != "title":
             ret += "\n"
         if p == "samples":
             ret = "#"
             i = 1
-            for sample in self.data[p]:
+            for sample in self.body[p]:
                 ret += (
                     "### 输入 \\#"
                     + str(i)
@@ -110,7 +114,7 @@ class Problem:
                 )
                 i += 1
             return ret
-        return ret + self.data[p] + "\n"
+        return ret + self.body[p] + "\n"
 
     async def fetch_resources(self):
         """取回题目资源并将其存储到 self.data 中,返回 self.data"""
@@ -127,12 +131,33 @@ class Problem:
         # 解析请求到的 json
         rescoures = json.loads(raw_resources.text)
         if rescoures["code"] != 200:
-            raise HttpError(f"访问{self.__BASE_URL}{self.problem_id}失败：HTTP ERROR {rescoures["code"]}")
-        self.data = rescoures["currentData"]["problem"]
-        return self.data
+            raise HttpError(
+                f"访问{self.__BASE_URL}{self.problem_id}失败：HTTP ERROR {rescoures["code"]}"
+            )
+        data = rescoures["currentData"]["problem"]
+        self.difficulty = data["difficulty"]
+        self.tags = data["tags"]
+        self.limits = data["limits"]
+        self.body = {}
+        for s in [
+            "samples",
+            "background",
+            "inputFormat",
+            "outputFormat",
+            "hint",
+            "title",
+            "description",
+            "translation",
+            "title",
+        ]:
+            if s in data:
+                self.body[s] = data[s]
+        return data
 
     def get_markdown(self, order=None):
         """以 order 的顺序获取题目的markdown"""
+        if hasattr(self, "markdown"):
+            return self.markdown
         self.markdown = self.part_markdown("title")
         for c in order:
             self.markdown += self.part_markdown(c)
@@ -166,11 +191,6 @@ class Problem:
             i += 1
         return self.markdown
 
-    def diffculty(self) -> int:
-        """返回题目难度"""
-        return self.data["diffculty"]
-
-
 class Training:
     """洛谷题单类"""
 
@@ -195,7 +215,9 @@ class Training:
         print("解析题单" + self.training_id)
         rescoures = json.loads(raw_resources.text)
         if rescoures["code"] != 200:
-            raise HttpError(f"访问{self.__BASE_URL}{self.training_id}失败：HTTP ERROR {rescoures["code"]}")
+            raise HttpError(
+                f"访问{self.__BASE_URL}{self.training_id}失败：HTTP ERROR {rescoures["code"]}"
+            )
         self.data = rescoures["currentData"]["training"]
         for p in self.data["problems"]:
             self.problemList.append(Problem(problem_id=p["problem"]["pid"]))
