@@ -4,7 +4,7 @@ httpx 用于发送 http 请求
 """
 
 import json
-
+import asyncio
 import httpx
 
 headers = {
@@ -191,13 +191,14 @@ class Problem:
             i += 1
         return self.markdown
 
+
 class Training:
     """洛谷题单类"""
 
     __BASE_URL = "https://www.luogu.com.cn/training/"
     training_id = ""
-    data = None
-    problemList = []
+    problem_list = []
+    markdown: str
 
     def __init__(self, training_id) -> None:
         self.training_id = training_id
@@ -210,7 +211,6 @@ class Training:
                 self.__BASE_URL + self.training_id,
                 params=params,
                 headers=headers,
-                #                cookies=cookies,
             )
         print("解析题单" + self.training_id)
         rescoures = json.loads(raw_resources.text)
@@ -218,11 +218,17 @@ class Training:
             raise HttpError(
                 f"访问{self.__BASE_URL}{self.training_id}失败：HTTP ERROR {rescoures["code"]}"
             )
-        self.data = rescoures["currentData"]["training"]
-        for p in self.data["problems"]:
-            self.problemList.append(Problem(problem_id=p["problem"]["pid"]))
-        return self.data
+        data = rescoures["currentData"]["training"]
+        for p in data["problems"]:
+            self.problem_list.append(Problem(problem_id=p["problem"]["pid"]))
+        async with asyncio.TaskGroup() as tg:
+            for p in self.problem_list:
+                tg.create_task(p.fetch_resources())
+        return data
 
-    def get_problem_list(self):
-        """返回题单包含的题目列表"""
-        return self.problemList
+    def get_markdown(self,order:list):
+        """获取题单中所有题目的 markdown"""
+        self.markdown=""
+        for p in self.problem_list:
+            self.markdown += p.get_markdown(order)
+        return self.markdown

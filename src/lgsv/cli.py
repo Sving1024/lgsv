@@ -20,20 +20,19 @@ async def main():
     trainings = []
     if ("problem" in setting.target) & (setting.target["problem"] is not None):
         for p in setting.target["problem"]:
-            problems.append(luogu.Problem(problem_id=p, config=setting.global_config))
+            problems.append(luogu.Problem(problem_id=p))
     if ("training" in setting.target) & (setting.target["training"] is not None):
         for t in setting.target["training"]:
             trainings.append(luogu.Training(training_id=t))
     async with asyncio.TaskGroup() as tg:
         for t in trainings:
             tg.create_task(t.fetch_resources())
-    for t in trainings:
-        problems.extend(t.get_problem_list())
-    async with asyncio.TaskGroup() as tg:
         for p in problems:
             tg.create_task(p.fetch_resources())
     for p in problems:
         md_src += p.get_markdown(setting.global_config["order"])
+    for t in trainings:
+        md_src += t.get_markdown(setting.global_config["order"])
     with open(file=setting.global_config["output"], mode="w", encoding="utf-8") as f:
         f.write(md_src)
 
