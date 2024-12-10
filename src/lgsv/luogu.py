@@ -12,13 +12,11 @@ headers = {
     "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
     "Referer": "https://www.luogu.com.cn/",
     "Connection": "keep-alive",
-    #    "Cookie": "",
     "Upgrade-Insecure-Requests": "1",
     "Sec-Fetch-Dest": "document",
     "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-Site": "cross-site",
     "Priority": "u=0, i",
-    #    "x-csrf-token": "",
 }
 params = {"_contentOnly": ""}
 
@@ -60,6 +58,8 @@ class Problem:
     tags: list
     limits = {"time": [], "memory": []}
     body: dict
+    accepted: bool
+    submitted: bool
 
     def __init__(self, problem_id) -> None:
         self.problem_id = problem_id
@@ -152,6 +152,10 @@ class Problem:
         ]:
             if s in data:
                 self.body[s] = data[s]
+        if "accepted" in data:
+            self.accepted = data["accepted"]
+        if "submmited" in data:
+            self.submitted = data["submmited"]
         return data
 
     def get_markdown(self, order=None):
@@ -226,9 +230,13 @@ class Training:
                 tg.create_task(p.fetch_resources())
         return data
 
-    def get_markdown(self,order:list):
+    def get_markdown(self, order: list):
         """获取题单中所有题目的 markdown"""
-        self.markdown=""
+        self.markdown = ""
         for p in self.problem_list:
             self.markdown += p.get_markdown(order)
         return self.markdown
+
+
+class filter:
+    pass
