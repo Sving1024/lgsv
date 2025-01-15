@@ -8,7 +8,7 @@ import asyncio
 import httpx
 
 headers = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept": "application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
     "Referer": "https://www.luogu.com.cn/",
     "Connection": "keep-alive",
@@ -125,7 +125,7 @@ class Problem:
                 self.__BASE_URL + self.problem_id,
                 params=params,
                 headers=headers,
-                #                cookies=cookies,
+                follow_redirects=True
             )
         print("解析题目" + self.problem_id)
         # 解析请求到的 json
@@ -215,6 +215,7 @@ class Training:
                 self.__BASE_URL + self.training_id,
                 params=params,
                 headers=headers,
+                follow_redirects=True
             )
         print("解析题单" + self.training_id)
         rescoures = json.loads(raw_resources.text)
