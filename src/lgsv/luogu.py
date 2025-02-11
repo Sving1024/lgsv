@@ -17,6 +17,7 @@ headers = {
     "Sec-Fetch-Mode": "navigate",
     "Sec-Fetch-Site": "cross-site",
     "Priority": "u=0, i",
+    "x-lentille-request": "content-only",
 }
 params = {"_contentOnly": ""}
 
@@ -125,16 +126,16 @@ class Problem:
                 self.__BASE_URL + self.problem_id,
                 params=params,
                 headers=headers,
-                follow_redirects=True
+                follow_redirects=True,
             )
         print("解析题目" + self.problem_id)
         # 解析请求到的 json
         rescoures = json.loads(raw_resources.text)
-        if rescoures["code"] != 200:
+        if rescoures["status"] != 200:
             raise HttpError(
                 f"访问{self.__BASE_URL}{self.problem_id}失败：HTTP ERROR {rescoures["code"]}"
             )
-        data = rescoures["currentData"]["problem"]
+        data = rescoures["data"]["problem"]
         self.difficulty = data["difficulty"]
         self.tags = data["tags"]
         self.limits = data["limits"]
@@ -215,7 +216,7 @@ class Training:
                 self.__BASE_URL + self.training_id,
                 params=params,
                 headers=headers,
-                follow_redirects=True
+                follow_redirects=True,
             )
         print("解析题单" + self.training_id)
         rescoures = json.loads(raw_resources.text)
