@@ -6,6 +6,7 @@ httpx 用于发送 http 请求
 import json
 import asyncio
 import httpx
+import textwrap
 
 headers = {
     "Accept": "application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -58,9 +59,10 @@ class Problem:
     difficulty: int
     tags: list
     limits = {"time": [], "memory": []}
-    body: dict
+    content: dict
     accepted: bool
     submitted: bool
+    sample: list
 
     def __init__(self, problem_id) -> None:
         self.problem_id = problem_id
@@ -76,46 +78,42 @@ class Problem:
             case "background" | "b":
                 ret = "## 题目背景"
                 p = "background"
-            case "inputFormat" | "if":
+            case "formatI" | "if":
                 ret = "## 输入格式"
-                p = "inputFormat"
-            case "outputFormat" | "of":
+                p = "formatI"
+            case "formatO" | "of":
                 ret = "## 输出格式"
-                p = "outputFormat"
+                p = "formatO"
             case "hint" | "h":
                 ret = "## 说明/提示"
                 p = "hint"
-            case "title" | "ti":
+            case "name" | "n":
                 ret = "# "
-                p = "title"
+                p = "name"
             case "description" | "d":
                 ret = "## 题目描述"
                 p = "description"
             case "translation" | "tr":
                 ret = "## 题目翻译"
                 p = "translation"
-        if str(p) not in self.body or self.body[p] is None:
-            return ""
-        if p != "title":
+        if p != "name":
             ret += "\n"
         if p == "samples":
-            ret = "#"
-            i = 1
-            for sample in self.body[p]:
+            for i, sample in enumerate(self.sample):
                 ret += (
-                    "### 输入 \\#"
-                    + str(i)
-                    + "\n```\n"
-                    + sample[0]
-                    + "\n```\n### 输出 \\#"
-                    + str(i)
-                    + "\n```\n"
-                    + sample[1]
-                    + "\n```\n"
+                    f"### 输入 \\#{str(i+1)}\n"
+                    f"```\n"
+                    f"{sample[0]}\n"
+                    f"```\n"
+                    f"### 输出 \\#{str(i+1)}\n"
+                    f"```\n"
+                    f"{sample[1]}\n"
+                    f"```\n"
                 )
-                i += 1
             return ret
-        return ret + self.body[p] + "\n"
+        if p not in self.content or self.content[p] is None or self.content[p]=="":
+            return ""
+        return ret + self.content[p] + "\n"
 
     async def fetch_resources(self):
         """取回题目资源并将其存储到 self.data 中,返回 self.data"""
@@ -133,37 +131,29 @@ class Problem:
         rescoures = json.loads(raw_resources.text)
         if rescoures["status"] != 200:
             raise HttpError(
-                f"访问{self.__BASE_URL}{self.problem_id}失败：HTTP ERROR {rescoures["code"]}"
+                f"访问{self.__BASE_URL}{self.problem_id}失败：HTTP ERROR {rescoures['code']}"
             )
         data = rescoures["data"]["problem"]
         self.difficulty = data["difficulty"]
         self.tags = data["tags"]
         self.limits = data["limits"]
-        self.body = {}
-        for s in [
-            "samples",
-            "background",
-            "inputFormat",
-            "outputFormat",
-            "hint",
-            "title",
-            "description",
-            "translation",
-            "title",
-        ]:
-            if s in data:
-                self.body[s] = data[s]
+        self.content = data["content"]
+        self.sample = data["samples"]
         if "accepted" in data:
             self.accepted = data["accepted"]
+        else:
+            self.accepted = False
         if "submmited" in data:
             self.submitted = data["submmited"]
+        else:
+            self.submitted = False
         return data
 
     def get_markdown(self, order=None):
         """以 order 的顺序获取题目的markdown"""
         if hasattr(self, "markdown"):
             return self.markdown
-        self.markdown = self.part_markdown("title")
+        self.markdown = self.part_markdown("name")
         for c in order:
             self.markdown += self.part_markdown(c)
         cnt_d = 0
@@ -222,7 +212,7 @@ class Training:
         rescoures = json.loads(raw_resources.text)
         if rescoures["code"] != 200:
             raise HttpError(
-                f"访问{self.__BASE_URL}{self.training_id}失败：HTTP ERROR {rescoures["code"]}"
+                f"访问{self.__BASE_URL}{self.training_id}失败：HTTP ERROR {rescoures['code']}"
             )
         data = rescoures["currentData"]["training"]
         for p in data["problems"]:
@@ -240,5 +230,11 @@ class Training:
         return self.markdown
 
 
-class filter:
-    pass
+class ProblemFilter:
+    """filter of problems"""
+
+    def __init__(self):
+        pass
+
+    def __call__(self, p: Problem) -> bool:
+        pass

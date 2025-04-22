@@ -32,6 +32,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 testpaths = "tests"
 python_files = "tests.py test_*.py *_tests.py"
+pythonpath = "src"
 
 [tool.pylint.design]
 max-line-length = 120

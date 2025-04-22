@@ -1,16 +1,17 @@
 import sys
 
 import pytest
+import pathlib
+from lgsv import luogu
+import asyncio
 
-try:
-    import luogu
-    import setting
-except ModuleNotFoundError:
-    from lgsv import luogu, setting
+basepath = pathlib.Path(__file__).parent
+
 
 def test_luogu_training():
-    t=luogu.Training("100")
-    t.fetch_resources()
+    """test training class"""
+    t = luogu.Training("100")
+    asyncio.run(t.fetch_resources())
     md = t.get_markdown(["b", "d", "if", "of", "s", "h", "tr"])
-    with open("./100.md",encoding="utf-8") as f:
+    with open(basepath / "sample" / "t100.md", encoding="utf-8") as f:
         assert f.read() == md

@@ -2,11 +2,7 @@
 
 import asyncio
 
-try:
-    import luogu
-    import setting
-except ModuleNotFoundError:
-    from lgsv import luogu, setting
+from lgsv import luogu, setting
 
 
 async def main():
