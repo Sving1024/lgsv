@@ -1,9 +1,10 @@
+import asyncio
+import pathlib
 import sys
 
 import pytest
-import pathlib
+
 from lgsv import luogu
-import asyncio
 
 basepath = pathlib.Path(__file__).parent
 
