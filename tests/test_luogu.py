@@ -1,8 +1,8 @@
+"""
+test lgsv.luogu
+"""
 import asyncio
 import pathlib
-import sys
-
-import pytest
 
 from lgsv import luogu
 

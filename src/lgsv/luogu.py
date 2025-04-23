@@ -1,11 +1,9 @@
 """
-json 解析获取的 json
-httpx 用于发送 http 请求
+luogu class
 """
 
 import asyncio
 import json
-import textwrap
 
 import httpx
 
