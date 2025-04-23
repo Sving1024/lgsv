@@ -1,18 +1,13 @@
 name: pypi publish
-
-on:
-  release
-
+on: release
 # .github/workflows/ci-cd.yml
 jobs:
   build-and-inspect-package:
     name: Build & inspect package.
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - uses: hynek/build-and-inspect-python-package@v2
-
   pypi-publish:
     name: Upload release to PyPI
     runs-on: ubuntu-latest
@@ -20,9 +15,13 @@ jobs:
       name: pypi
       url: https://pypi.org/p/lgsv
     permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
-    # retrieve your distributions here
-
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      # retrieve your distributions here
+      - name: Download built artifact to dist/
+        uses: actions/download-artifact@v4
+        with:
+          name: Packages
+          path: dist
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
