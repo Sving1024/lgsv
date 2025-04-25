@@ -4,8 +4,9 @@ luogu class
 
 import asyncio
 import json
-
 import httpx
+from lgsv import log, setting
+
 
 headers = {
     "Accept": "application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -36,16 +37,6 @@ async def fetch_csrf_token():
     headers["x-csrf-token"] = csrf_token.get("content")
     return headers["x-csrf-token"]
 """
-
-
-class HttpError(Exception):
-    """
-    HTTP 异常。
-    由于处理各类 HTTP 错误。
-    """
-
-    def __init__(self, msg):
-        self.message = msg
 
 
 class Problem:
@@ -110,43 +101,54 @@ class Problem:
                     f"```\n"
                 )
             return ret
-        if p not in self.content or self.content[p] is None or self.content[p]=="":
+        if p not in self.content or self.content[p] is None or self.content[p] == "":
             return ""
         return ret + self.content[p] + "\n"
 
     async def fetch_resources(self):
         """取回题目资源并将其存储到 self.data 中,返回 self.data"""
-        # 将请求存储到 __html_cache 中
-        print("从" + self.__BASE_URL + self.problem_id + "获取数据")
-        async with httpx.AsyncClient() as client:
-            raw_resources = await client.get(
-                self.__BASE_URL + self.problem_id,
-                params=params,
-                headers=headers,
-                follow_redirects=True,
-            )
-        print("解析题目" + self.problem_id)
-        # 解析请求到的 json
-        rescoures = json.loads(raw_resources.text)
-        if rescoures["status"] != 200:
-            raise HttpError(
-                f"访问{self.__BASE_URL}{self.problem_id}失败：HTTP ERROR {rescoures['code']}"
-            )
-        data = rescoures["data"]["problem"]
-        self.difficulty = data["difficulty"]
-        self.tags = data["tags"]
-        self.limits = data["limits"]
-        self.content = data["content"]
-        self.sample = data["samples"]
-        if "accepted" in data:
-            self.accepted = data["accepted"]
-        else:
-            self.accepted = False
-        if "submmited" in data:
-            self.submitted = data["submmited"]
-        else:
-            self.submitted = False
-        return data
+        for times in range(setting.global_config["max_retry_times"]):
+            try:
+                log.logger.warning("从 %s%s 获取数据", self.__BASE_URL, self.problem_id)
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        self.__BASE_URL + self.problem_id,
+                        params=params,
+                        headers=headers,
+                        follow_redirects=True,
+                    )
+                response.raise_for_status()
+                log.logger.warning("解析题目 %s", self.problem_id)
+                # 解析请求到的 json
+                rescoures = json.loads(response.text)
+                data = rescoures["data"]["problem"]
+                self.difficulty = data["difficulty"]
+                self.tags = data["tags"]
+                self.limits = data["limits"]
+                self.content = data["content"]
+                self.sample = data["samples"]
+                if "accepted" in data:
+                    self.accepted = data["accepted"]
+                else:
+                    self.accepted = False
+                if "submmited" in data:
+                    self.submitted = data["submmited"]
+                else:
+                    self.submitted = False
+            except httpx.HTTPError as e:
+                log.logger.error(
+                    "获取题目 %s 信息失败：无法访问目标 url：%s", self.problem_id, e
+                )
+                if setting.global_config["max_retry_times"] - times - 1 != 0:
+                    log.logger.error(
+                        "将于 5s 后重试。剩余重试次数：%s",
+                        setting.global_config["max_retry_times"] - times - 1,
+                    )
+                    await asyncio.sleep(5)
+                else:
+                    raise e
+            else:
+                return
 
     def get_markdown(self, order=None):
         """以 order 的顺序获取题目的markdown"""
@@ -199,27 +201,39 @@ class Training:
 
     async def fetch_resources(self):
         """取回题目资源并将其存储到 self.data 中,返回 self.data"""
-        print("从" + self.__BASE_URL + self.training_id + "获取数据")
-        async with httpx.AsyncClient() as client:
-            raw_resources = await client.get(
-                self.__BASE_URL + self.training_id,
-                params=params,
-                headers=headers,
-                follow_redirects=True,
-            )
-        print("解析题单" + self.training_id)
-        rescoures = json.loads(raw_resources.text)
-        if rescoures["code"] != 200:
-            raise HttpError(
-                f"访问{self.__BASE_URL}{self.training_id}失败：HTTP ERROR {rescoures['code']}"
-            )
-        data = rescoures["currentData"]["training"]
-        for p in data["problems"]:
-            self.problem_list.append(Problem(problem_id=p["problem"]["pid"]))
-        async with asyncio.TaskGroup() as tg:
-            for p in self.problem_list:
-                tg.create_task(p.fetch_resources())
-        return data
+        for times in range(setting.global_config["max_retry_times"]):
+            try:
+                log.logger.warning("从 %s%s 获取数据", self.__BASE_URL, self.training_id)
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        self.__BASE_URL + self.training_id,
+                        params=params,
+                        headers=headers,
+                        follow_redirects=True,
+                    )
+                response.raise_for_status()
+                log.logger.warning("解析题单 %s", self.training_id)
+                rescoures = json.loads(response.text)
+                data = rescoures["currentData"]["training"]
+                for p in data["problems"]:
+                    self.problem_list.append(Problem(problem_id=p["problem"]["pid"]))
+                async with asyncio.TaskGroup() as tg:
+                    for p in self.problem_list:
+                        tg.create_task(p.fetch_resources())
+            except httpx.HTTPError as e:
+                log.logger.error(
+                    "获取题单 %s 信息失败：无法访问目标 url：%s", self.training_id, e
+                )
+                if setting.global_config["max_retry_times"] - times - 1 != 0:
+                    log.logger.error(
+                        "将于 5s 后重试。剩余重试次数：%s",
+                        setting.global_config["max_retry_times"] - times - 1,
+                    )
+                    await asyncio.sleep(5)
+                else:
+                    raise e
+            else:
+                return True
 
     def get_markdown(self, order: list):
         """获取题单中所有题目的 markdown"""

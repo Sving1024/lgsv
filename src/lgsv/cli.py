@@ -2,7 +2,7 @@
 
 import asyncio
 
-from lgsv import luogu, setting
+from lgsv import luogu, setting, log
 
 
 async def main():
@@ -20,11 +20,16 @@ async def main():
     if ("training" in setting.target) & (setting.target["training"] is not None):
         for t in setting.target["training"]:
             trainings.append(luogu.Training(training_id=t))
-    async with asyncio.TaskGroup() as tg:
-        for t in trainings:
-            tg.create_task(t.fetch_resources())
-        for p in problems:
-            tg.create_task(p.fetch_resources())
+    try:
+        async with asyncio.TaskGroup() as tg:
+            for t in trainings:
+                tg.create_task(t.fetch_resources())
+            for p in problems:
+                tg.create_task(p.fetch_resources())
+    except (ExceptionGroup, BaseExceptionGroup) as e:
+        log.logger.error("无法获取某些题目的信息。其余任务已取消。")
+        log.logger.error("%s", e)
+        return
     for p in problems:
         md_src += p.get_markdown(setting.global_config["order"])
     for t in trainings:

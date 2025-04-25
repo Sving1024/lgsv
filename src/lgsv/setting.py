@@ -28,6 +28,8 @@ global_config = {
     "cookie": "",
     "order": ["b", "d", "if", "of", "s", "h", "tr"],
     "output": "out.md",
+    "max_retry_times": 5,
+    "loglevel": "WARNING",
 }
 
 arg_parser = argparse.ArgumentParser(
@@ -38,23 +40,27 @@ arg_parser.add_argument("-p", "--problem", action="append", help="题目列表")
 arg_parser.add_argument("-t", "--training", action="append", help="题单列表")
 arg_parser.add_argument("--pandoc-args", type=str, help="传给pandoc的参数")
 # arg_parser.add_argument("--client-id", type=str, help="client id")
-arg_parser.add_argument(
-    "--order",
-    type=str,
-    help='\n'.join([
-        "指定题目部分的顺序，用逗号分隔。",
-        "b/background 对应题目背景",
-        "s/samples 对应样例",
-        "if/inputFormat 对应输入格式",
-        "of/outputFormat 对应输出格式",
-        "h/hint 对应说明/提示",
-        "d/description 对应题目描述",
-        "tr/translation 对应题目翻译。",
-    ])
-)
 # arg_parser.add_argument("-u","--uid",type=int,help="洛谷uid")
 arg_parser.add_argument("-c", "--cookie", type=str, help="洛谷cookie")
 arg_parser.add_argument("-o", "--output", type=str, help="输出 markdown 的位置")
+arg_parser.add_argument("--max-retry-times", type=int, help="失败时重试次数")
+arg_parser.add_argument("--loglevel", type=str, help="日志等级")
+arg_parser.add_argument(
+    "--order",
+    type=str,
+    help="\n".join(
+        [
+            "指定题目部分的顺序，用逗号分隔。",
+            "b/background 对应题目背景",
+            "s/samples 对应样例",
+            "if/inputFormat 对应输入格式",
+            "of/outputFormat 对应输出格式",
+            "h/hint 对应说明/提示",
+            "d/description 对应题目描述",
+            "tr/translation 对应题目翻译。",
+        ]
+    ),
+)
 
 
 def parse_args():
@@ -71,3 +77,7 @@ def parse_args():
         global_config["order"] = args["order"].split(",")
     if args["output"] is not None:
         global_config["output"] = args["output"]
+    if args["max_retry_times"] is not None:
+        global_config["max_retry_times"] = args["max_retry_times"]
+    if args["loglevel"] is not None:
+        global_config["loglevel"] = args["loglevel"]
