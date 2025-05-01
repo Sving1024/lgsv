@@ -3,6 +3,7 @@ logging.
 """
 
 import logging
+
 from lgsv import setting
 
 logging.basicConfig(format="%(levelname)-8s %(name)s: %(message)s")

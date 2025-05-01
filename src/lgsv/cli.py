@@ -2,7 +2,7 @@
 
 import asyncio
 
-from lgsv import luogu, setting, log
+from lgsv import log, luogu, setting
 
 
 async def main():
