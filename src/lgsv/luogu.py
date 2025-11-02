@@ -6,8 +6,10 @@ import asyncio
 import json
 
 import httpx
+from bs4 import BeautifulSoup
 
 from lgsv import log, setting
+
 
 headers = {
     "Accept": "application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -23,21 +25,23 @@ headers = {
 }
 params = {"_contentOnly": ""}
 
-"""
+
 async def fetch_csrf_token():
-    获取csrf token
+    """获取csrf token"""
     async with httpx.AsyncClient() as client:
         response = await client.get(
             url="https://www.luogu.com.cn",
             #            params=params,
             headers=headers,
-#            cookies=cookies,
+            #            cookies=cookies,
         )
     soup = BeautifulSoup(response.text, "html.parser")
     csrf_token = soup.find("meta", attrs={"name": "csrf-token"})
-    headers["x-csrf-token"] = csrf_token.get("content")
+    if csrf_token is None:
+        log.logger.error("无法获取 csrf token，请检查 cookie 是否正确")
+        return None
+    headers["x-csrf-token"] = csrf_token.get('content')
     return headers["x-csrf-token"]
-"""
 
 
 class Problem:
@@ -60,7 +64,7 @@ class Problem:
 
     def part_markdown(self, part):
         """单独获取题目的部分markdown,如题目背景,题目描述等"""
-        ret = None
+        ret = ""
         p = part
         match part:
             case "samples" | "s":
@@ -151,7 +155,7 @@ class Problem:
             else:
                 return
 
-    def get_markdown(self, order=None):
+    def get_markdown(self, order: list):
         """以 order 的顺序获取题目的markdown"""
         if hasattr(self, "markdown"):
             return self.markdown
@@ -189,6 +193,58 @@ class Problem:
         return self.markdown
 
 
+class ProblemFilter:
+    """filter of problems"""
+
+    diffclty: list
+    include_tags: list
+    exclude_tags: list
+    include_accepted: bool
+    include_submitted: bool
+
+    def __init__(
+        self,
+        diffclty=None,
+        include_tags=None,
+        exclude_tags=None,
+        include_accepted: bool = False,
+        include_submitted: bool = False,
+    ) -> None:
+        if diffclty is None:
+            diffclty = [0, 1, 2, 3, 4, 5]
+        if include_tags is None:
+            include_tags = []
+        if exclude_tags is None:
+            exclude_tags = []
+        self.diffclty = diffclty
+        self.include_tags = include_tags
+        self.exclude_tags = exclude_tags
+        self.include_accepted = include_accepted
+        self.include_submitted = include_submitted
+
+    def match(self, p: Problem) -> bool:
+        """check if problem p matches the filter"""
+        if p.difficulty not in self.diffclty:
+            return False
+        if self.exclude_tags and set(self.exclude_tags).intersection(set(p.tags)):
+            return False
+        if self.include_tags and not set(self.include_tags).intersection(set(p.tags)):
+            return False
+        if not self.include_accepted and p.accepted:
+            return False
+        if not self.include_submitted and p.submitted:
+            return False
+        return True
+
+    def filt(self, problem_list: list) -> list:
+        """filter training t and return the filtered training"""
+        filtered_problems = []
+        for p in problem_list:
+            if self.match(p):
+                filtered_problems.append(p)
+        return filtered_problems
+
+
 class Training:
     """洛谷题单类"""
 
@@ -197,14 +253,16 @@ class Training:
     problem_list = []
     markdown: str
 
-    def __init__(self, training_id) -> None:
+    def __init__(self, training_id: str) -> None:
         self.training_id = training_id
 
     async def fetch_resources(self):
         """取回题目资源并将其存储到 self.data 中,返回 self.data"""
         for times in range(setting.global_config["max_retry_times"]):
             try:
-                log.logger.warning("从 %s%s 获取数据", self.__BASE_URL, self.training_id)
+                log.logger.warning(
+                    "从 %s%s 获取数据", self.__BASE_URL, self.training_id
+                )
                 async with httpx.AsyncClient() as client:
                     response = await client.get(
                         self.__BASE_URL + self.training_id,
@@ -243,12 +301,52 @@ class Training:
             self.markdown += p.get_markdown(order)
         return self.markdown
 
+    def __len__(self):
+        return len(self.problem_list)
 
-class ProblemFilter:
-    """filter of problems"""
+    def add_problem(self, problem_id):
+        """向题单中添加题目"""
+        self.problem_list.append(Problem(problem_id=problem_id))
 
-    def __init__(self):
-        pass
+    def merge_training(self, training):
+        """将另一个题单的题目合并到当前题单中"""
+        for p in training.problem_list:
+            self.problem_list.append(p)
 
-    def __call__(self, p: Problem) -> bool:
-        pass
+    def remove_problem(self, problem_id):
+        """从题单中移除题目"""
+        self.problem_list = [p for p in self.problem_list if p.problem_id != problem_id]
+
+    async def submit_changes(self):
+        """同步题单与远程题单"""
+        await fetch_csrf_token()
+        for times in range(setting.global_config["max_retry_times"]):
+            try:
+                log.logger.warning("同步题单 %s 与远程题单", self.training_id)
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        url=f"https://www.luogu.com.cn/api/training/editProblems/{self.training_id}",
+                        headers=headers,
+                        json={"pids": [p.problem_id for p in self.problem_list]},
+                        follow_redirects=True,
+                    )
+                response.raise_for_status()
+            except httpx.HTTPError as e:
+                log.logger.error(
+                    "同步题单 %s 失败：无法访问目标 url：%s", self.training_id, e
+                )
+                if setting.global_config["max_retry_times"] - times - 1 != 0:
+                    log.logger.error(
+                        "将于 5s 后重试。剩余重试次数：%s",
+                        setting.global_config["max_retry_times"] - times - 1,
+                    )
+                    await asyncio.sleep(5)
+                else:
+                    raise e
+            else:
+                log.logger.info("题单 %s 同步完成。", self.training_id)
+                return
+
+    def filt_by(self, problem_filter: ProblemFilter):
+        """使用 filter 过滤题单中的题目"""
+        self.problem_list = problem_filter.filt(self.problem_list)
