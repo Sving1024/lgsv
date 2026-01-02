@@ -61,7 +61,7 @@ class Problem:
         self.submitted: bool
         self.sample: list
 
-    def part_markdown(self, part):
+    def part_markdown(self, part, language = "zh-CN"):
         """单独获取题目的部分markdown,如题目背景,题目描述等"""
         ret = ""
         p = part
@@ -105,9 +105,9 @@ class Problem:
                     f"```\n"
                 )
             return ret
-        if p not in self.content or self.content[p] is None or self.content[p] == "":
+        if p not in self.content[language] or self.content[language][p] is None or self.content[language][p] == "":
             return ""
-        return ret + self.content[p] + "\n"
+        return ret + self.content[language][p] + "\n"
 
     async def fetch_resources(self):
         """取回题目资源并将其存储到 self.data 中,返回 self.data"""
@@ -129,7 +129,7 @@ class Problem:
                 self.difficulty = data["difficulty"]
                 self.tags = data["tags"]
                 self.limits = data["limits"]
-                self.content = data["content"]
+                self.content = rescoures["data"]["translations"]
                 self.sample = data["samples"]
                 if "accepted" in data:
                     self.accepted = data["accepted"]
@@ -154,13 +154,13 @@ class Problem:
             else:
                 return
 
-    def get_markdown(self, order: list):
+    def get_markdown(self, order: list, language = "zh-CN"):
         """以 order 的顺序获取题目的markdown"""
         if hasattr(self, "markdown"):
             return self.markdown
-        self.markdown = self.part_markdown("name")
+        self.markdown = self.part_markdown("name", language)
         for c in order:
-            self.markdown += self.part_markdown(c)
+            self.markdown += self.part_markdown(c, language)
         cnt_d = 0
         i = 0
         while i < len(self.markdown):
@@ -285,7 +285,7 @@ class Training:
                     raise e
             else:
                 return True
-    
+
     def remove_duplicates(self):
         """移除题单中重复的题目"""
         seen = set()
@@ -321,7 +321,7 @@ class Training:
         """从题单中移除题目"""
         self.problem_list = [p for p in self.problem_list if p.problem_id != problem_id]
         self.remove_duplicates()
-    
+
     async def submit_changes(self):
         """同步题单与远程题单"""
         await fetch_csrf_token()

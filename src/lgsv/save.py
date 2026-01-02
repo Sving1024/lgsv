@@ -4,7 +4,7 @@ import asyncio
 import pathlib
 
 
-from lgsv import log, luogu, setting
+from lgsv import log, setting
 
 async def save_problems(
     problems,
@@ -12,6 +12,7 @@ async def save_problems(
     output_file=pathlib.Path("out.md"),
     order=None,
     problem_filter=None,
+    language="zh-CN",
 ):
     """save problems to markdown file"""
     if order is None:
@@ -30,8 +31,8 @@ async def save_problems(
     if problem_filter is not None:
         problems = problem_filter.filt(problems)
     for p in problems:
-        md_src += p.get_markdown(order)
+        md_src += p.get_markdown(order, language)
     for t in trainings:
-        md_src += t.get_markdown(order)
+        md_src += t.get_markdown(order, language)
     with output_file.open(mode="w", encoding="utf-8") as f:
         f.write(md_src)

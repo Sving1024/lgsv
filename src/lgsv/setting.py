@@ -11,6 +11,7 @@ saver_config = {
     "training": [],
     "order": ["b", "d", "if", "of", "s", "h", "tr"],
     "output": "out.md",
+    "language": "zh-CN",
 }
 
 editor_config = {
@@ -64,6 +65,11 @@ def init_arg_parser():
             ]
         ),
     )
+    save_options.add_argument(
+        "--language",
+        type=str,
+        help="指定题目语言，默认为 zh-CN",
+    )
 
     edit_options = action_parser.add_parser("edit", help="编辑题单")
     edit_options.description = "edit 相关选项"
@@ -87,7 +93,7 @@ def init_arg_parser():
     arg_parser.add_argument("-c", "--cookie", type=str, help="洛谷cookie")
     arg_parser.add_argument("--loglevel", type=str, help="日志等级")
     arg_parser.add_argument("--max-retry-times", type=int, help="失败时重试次数")
-    
+
 
 
 def parse_filter_args(args):
@@ -148,6 +154,8 @@ def parse_save_args(args):
                 parsed_order.append(order_map[item])
         if len(parsed_order) > 0:
             saver_config["order"] = parsed_order
+    if args.language is not None:
+        saver_config["language"] = args.language
 
 
 def parse_args():

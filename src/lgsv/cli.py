@@ -24,6 +24,7 @@ async def main():
                 output_file=pathlib.Path(setting.saver_config["output"]),
                 order=setting.saver_config["order"],
                 problem_filter=problem_filter,
+                language=setting.saver_config["language"],
             )
         case "edit":
             await edit.edit_training(
