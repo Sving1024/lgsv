@@ -17,7 +17,6 @@ async def save_problems(
     if order is None:
         order = setting.saver_config["order"]
     md_src = ""
-    trainings = [luogu.Training(training_id=t) for t in trainings]
     try:
         async with asyncio.TaskGroup() as tg:
             for t in trainings:

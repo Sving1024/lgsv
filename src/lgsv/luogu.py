@@ -40,27 +40,26 @@ async def fetch_csrf_token():
     if csrf_token is None:
         log.logger.error("无法获取 csrf token，请检查 cookie 是否正确")
         return None
-    headers["x-csrf-token"] = csrf_token.get('content')
+    headers["x-csrf-token"] = str(csrf_token.get('content'))
     return headers["x-csrf-token"]
-
 
 class Problem:
     """洛谷题目类"""
 
     __BASE_URL = "https://www.luogu.com.cn/problem/"
-    problem_id: str
-    # data = None
-    markdown: str
-    difficulty: int
-    tags: list
-    limits = {"time": [], "memory": []}
-    content: dict
-    accepted: bool
-    submitted: bool
-    sample: list
 
     def __init__(self, problem_id) -> None:
         self.problem_id = problem_id
+        self.problem_id: str
+        # data = None
+        self.markdown: str
+        self.difficulty: int
+        self.tags: list
+        self.limits = {"time": [], "memory": []}
+        self.content: dict
+        self.accepted: bool
+        self.submitted: bool
+        self.sample: list
 
     def part_markdown(self, part):
         """单独获取题目的部分markdown,如题目背景,题目描述等"""
@@ -196,12 +195,6 @@ class Problem:
 class ProblemFilter:
     """filter of problems"""
 
-    diffclty: list
-    include_tags: list
-    exclude_tags: list
-    include_accepted: bool
-    include_submitted: bool
-
     def __init__(
         self,
         diffclty=None,
@@ -211,7 +204,7 @@ class ProblemFilter:
         include_submitted: bool = False,
     ) -> None:
         if diffclty is None:
-            diffclty = [0, 1, 2, 3, 4, 5]
+            diffclty = [0, 1, 2, 3, 4, 5, 6, 7]
         if include_tags is None:
             include_tags = []
         if exclude_tags is None:
@@ -249,12 +242,11 @@ class Training:
     """洛谷题单类"""
 
     __BASE_URL = "https://www.luogu.com.cn/training/"
-    training_id = ""
-    problem_list = []
-    markdown: str
 
     def __init__(self, training_id: str) -> None:
         self.training_id = training_id
+        self.problem_list: list[Problem] = []
+        self.markdown: str
 
     async def fetch_resources(self):
         """取回题目资源并将其存储到 self.data 中,返回 self.data"""
@@ -293,6 +285,16 @@ class Training:
                     raise e
             else:
                 return True
+    
+    def remove_duplicates(self):
+        """移除题单中重复的题目"""
+        seen = set()
+        unique_problems = []
+        for p in self.problem_list:
+            if p.problem_id not in seen:
+                seen.add(p.problem_id)
+                unique_problems.append(p)
+        self.problem_list = unique_problems
 
     def get_markdown(self, order: list):
         """获取题单中所有题目的 markdown"""
@@ -307,16 +309,19 @@ class Training:
     def add_problem(self, problem_id):
         """向题单中添加题目"""
         self.problem_list.append(Problem(problem_id=problem_id))
+        self.remove_duplicates()
 
-    def merge_training(self, training):
+    def merge_training(self, training: "Training"):
         """将另一个题单的题目合并到当前题单中"""
         for p in training.problem_list:
             self.problem_list.append(p)
+        self.remove_duplicates()
 
     def remove_problem(self, problem_id):
         """从题单中移除题目"""
         self.problem_list = [p for p in self.problem_list if p.problem_id != problem_id]
-
+        self.remove_duplicates()
+    
     async def submit_changes(self):
         """同步题单与远程题单"""
         await fetch_csrf_token()
