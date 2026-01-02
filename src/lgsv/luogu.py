@@ -296,11 +296,11 @@ class Training:
                 unique_problems.append(p)
         self.problem_list = unique_problems
 
-    def get_markdown(self, order: list):
+    def get_markdown(self, order: list, language = "zh-CN"):
         """获取题单中所有题目的 markdown"""
         self.markdown = ""
         for p in self.problem_list:
-            self.markdown += p.get_markdown(order)
+            self.markdown += p.get_markdown(order, language)
         return self.markdown
 
     def __len__(self):
