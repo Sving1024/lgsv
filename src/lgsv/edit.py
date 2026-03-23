@@ -1,21 +1,23 @@
 """编辑题单相关功能"""
 
 from lgsv import log
+from .luogu import Problem, Training, ProblemFilter
 
 
 async def edit_training(
     training,
-    add_problem=None,
-    merge_training=None,
-    remove_problem=None,
-    problem_filter=None,
+    add_problem: list[Problem] | None = None,
+    merge_training: list[Training] | None = None,
+    remove_problem: list[Problem] | None = None,
+    problem_filter: ProblemFilter | None = None,
 ):
     """编辑训练集，添加或合并题目"""
     await training.fetch_resources()
     if add_problem is not None:
         for p in add_problem:
+            await p.fetch_resources()
             training.add_problem(p)
-            log.logger.info("已向训练集 %s 添加题目 %s。", training.training_id, p)
+            log.logger.info("已向训练集 %s 添加题目 %s。", training.training_id, p.problem_id)
     if merge_training is not None:
         for training_obj in merge_training:
             await training_obj.fetch_resources()

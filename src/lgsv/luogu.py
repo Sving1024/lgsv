@@ -40,15 +40,16 @@ async def fetch_csrf_token():
     if csrf_token is None:
         log.logger.error("无法获取 csrf token，请检查 cookie 是否正确")
         return None
-    headers["x-csrf-token"] = str(csrf_token.get('content'))
+    headers["x-csrf-token"] = str(csrf_token.get("content"))
     return headers["x-csrf-token"]
+
 
 class Problem:
     """洛谷题目类"""
 
     __BASE_URL = "https://www.luogu.com.cn/problem/"
 
-    def __init__(self, problem_id) -> None:
+    def __init__(self, problem_id: str) -> None:
         self.problem_id = problem_id
         self.problem_id: str
         # data = None
@@ -61,7 +62,7 @@ class Problem:
         self.submitted: bool
         self.sample: list
 
-    def part_markdown(self, part, language = "zh-CN"):
+    def part_markdown(self, part, language="zh-CN"):
         """单独获取题目的部分markdown,如题目背景,题目描述等"""
         ret = ""
         p = part
@@ -105,7 +106,11 @@ class Problem:
                     f"```\n"
                 )
             return ret
-        if p not in self.content[language] or self.content[language][p] is None or self.content[language][p] == "":
+        if (
+            p not in self.content[language]
+            or self.content[language][p] is None
+            or self.content[language][p] == ""
+        ):
             return ""
         return ret + self.content[language][p] + "\n"
 
@@ -127,6 +132,8 @@ class Problem:
                 rescoures = json.loads(response.text)
                 data = rescoures["data"]["problem"]
                 self.difficulty = data["difficulty"]
+                if self.difficulty is None:
+                    self.difficulty = 0
                 self.tags = data["tags"]
                 self.limits = data["limits"]
                 self.content = rescoures["data"]["translations"]
@@ -154,7 +161,7 @@ class Problem:
             else:
                 return
 
-    def get_markdown(self, order: list, language = "zh-CN"):
+    def get_markdown(self, order: list, language="zh-CN"):
         """以 order 的顺序获取题目的markdown"""
         if hasattr(self, "markdown"):
             return self.markdown
@@ -197,19 +204,19 @@ class ProblemFilter:
 
     def __init__(
         self,
-        diffclty=None,
+        difficulty=None,
         include_tags=None,
         exclude_tags=None,
         include_accepted: bool = False,
         include_submitted: bool = False,
     ) -> None:
-        if diffclty is None:
-            diffclty = [0, 1, 2, 3, 4, 5, 6, 7]
+        if difficulty is None:
+            difficulty = [0, 1, 2, 3, 4, 5, 6, 7]
         if include_tags is None:
             include_tags = []
         if exclude_tags is None:
             exclude_tags = []
-        self.diffclty = diffclty
+        self.difficulty = difficulty
         self.include_tags = include_tags
         self.exclude_tags = exclude_tags
         self.include_accepted = include_accepted
@@ -217,7 +224,8 @@ class ProblemFilter:
 
     def match(self, p: Problem) -> bool:
         """check if problem p matches the filter"""
-        if p.difficulty not in self.diffclty:
+        log.logger.warning("正在检查题目 %s 是否符合过滤条件", p.problem_id)
+        if p.difficulty not in self.difficulty:
             return False
         if self.exclude_tags and set(self.exclude_tags).intersection(set(p.tags)):
             return False
@@ -296,7 +304,7 @@ class Training:
                 unique_problems.append(p)
         self.problem_list = unique_problems
 
-    def get_markdown(self, order: list, language = "zh-CN"):
+    def get_markdown(self, order: list, language="zh-CN"):
         """获取题单中所有题目的 markdown"""
         self.markdown = ""
         for p in self.problem_list:
@@ -306,9 +314,16 @@ class Training:
     def __len__(self):
         return len(self.problem_list)
 
-    def add_problem(self, problem_id):
+    def add_problem(self, problem: Problem):
         """向题单中添加题目"""
-        self.problem_list.append(Problem(problem_id=problem_id))
+        self.problem_list.append(problem)
+        self.remove_duplicates()
+
+    async def add_problem_with_id(self, problem_id: str):
+        """向题单中添加题目"""
+        p = Problem(problem_id=problem_id)
+        await p.fetch_resources()
+        self.problem_list.append(p)
         self.remove_duplicates()
 
     def merge_training(self, training: "Training"):
