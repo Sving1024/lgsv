@@ -93,6 +93,7 @@ def init_arg_parser():
     arg_parser.add_argument("-c", "--cookie", type=str, help="洛谷cookie")
     arg_parser.add_argument("--loglevel", type=str, help="日志等级")
     arg_parser.add_argument("--max-retry-times", type=int, help="失败时重试次数")
+    arg_parser.add_argument("--ignore-error", action="store_true", help="忽略错误继续执行")
 
 
 
@@ -167,6 +168,8 @@ def parse_args():
         global_config["max_retry_times"] = args.max_retry_times
     if args.loglevel is not None:
         global_config["loglevel"] = args.loglevel
+    if args.ignore_error is not None:
+        global_config["ignore_error"] = args.ignore_error
 
     if "cookie" in args:
         global_config["cookie"] = args.cookie

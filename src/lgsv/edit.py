@@ -15,7 +15,6 @@ async def edit_training(
     await training.fetch_resources()
     if add_problem is not None:
         for p in add_problem:
-            await p.fetch_resources()
             training.add_problem(p)
             log.logger.info("已向训练集 %s 添加题目 %s。", training.training_id, p.problem_id)
     if merge_training is not None:
@@ -32,5 +31,5 @@ async def edit_training(
             training.remove_problem(p)
             log.logger.info("已从训练集 %s 移除题目 %s。", training.training_id, p)
     if problem_filter is not None:
-        training.filt_by(problem_filter=problem_filter)
+        await training.filt_by(problem_filter=problem_filter)
     await training.submit_changes()
